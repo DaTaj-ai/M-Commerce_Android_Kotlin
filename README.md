@@ -4,7 +4,8 @@
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 
 A modern, scalable Android mobile commerce app built with Kotlin, Jetpack Compose, and Clean Architecture. Designed for seamless product browsing, cart management, and currency selection.
-<img width="2420" height="2842" alt="M-Commerce" src="https://github.com/user-attachments/assets/5980f22f-1b18-4803-8260-c0f1106ff815" />
+<img width="2420" height="2842" alt="M-Commerce" src="https://github.com/user-attachments/assets/6c74a555-c463-495e-be71-b0b22ea1c9de" />
+
 
 This project also includes a dedicated Admin App for managing products and other store functionalities. The entire platform integrates with Shopify's Storefront API, utilizing GraphQL to efficiently fetch and manipulate store data.
 ---
