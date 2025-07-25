@@ -1,7 +1,9 @@
 package com.example.m_commerce.config.routes
 
-import AddAddressScreen
-import ManageAddressScreenUi
+import CartScreenUI
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.SnackbarHostState
@@ -14,22 +16,28 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.example.m_commerce.core.utils.extentions.navigateAndClear
+import com.example.m_commerce.features.AddressMangment.presentation.screen.AddAddressScreen
+import com.example.m_commerce.features.AddressMangment.presentation.screen.ManageAddressScreenUi
+import com.example.m_commerce.features.AddressMangment.presentation.screen.MapScreenUi
 import com.example.m_commerce.features.auth.presentation.login.LoginScreen
 import com.example.m_commerce.features.auth.presentation.register.RegisterScreen
 import com.example.m_commerce.features.brand.presentation.screen.BrandScreenUI
-import com.example.m_commerce.features.brand.presentation.screen.BrandsScreenUI
-import com.example.m_commerce.features.cart.presentation.screen.CartScreenUI
+import com.example.m_commerce.features.brand.presentation.screen.BrandsDetailsScreenUI
 import com.example.m_commerce.features.categories.presentation.screen.CategoryDetailsScreenUI
 import com.example.m_commerce.features.categories.presentation.screen.CategoryScreenUI
 import com.example.m_commerce.features.home.presentation.screens.HomeScreenUI
+import com.example.m_commerce.features.onboarding.presentation.screen.OnboardingScreenUI
 import com.example.m_commerce.features.orders.presentation.screen.CheckoutScreenUI
+import com.example.m_commerce.features.orders.presentation.screen.UserOrdersScreenUI
+import com.example.m_commerce.features.payment.presentation.screen.CreditCardDetailsUiLayout
 import com.example.m_commerce.features.payment.presentation.screen.PaymentScreenUI
-import com.example.m_commerce.features.payment.prsentation.screen.CreditCardDetailsUiLayout
 import com.example.m_commerce.features.product.presentation.screen.ProductDetailsScreenUI
-import com.example.m_commerce.features.profile.presentation.screen.CurrencyUiLayout
-import com.example.m_commerce.features.profile.presentation.screen.MapScreenUi
+import com.example.m_commerce.features.profile.presentation.screen.CurrencyScreenUi
+import com.example.m_commerce.features.profile.presentation.screen.HelpCenterScreenUiLayout
 import com.example.m_commerce.features.profile.presentation.screen.ProfileScreenUI
+import com.example.m_commerce.features.search.presentation.SearchScreen
 import com.example.m_commerce.features.wishlist.presentation.WishListScreen
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun NavSetup(
@@ -37,72 +45,121 @@ fun NavSetup(
     snackBarHostState: SnackbarHostState,
     modifier: Modifier = Modifier,
     showBottomNavbar: MutableState<Boolean>,
-    paddingValues: PaddingValues
+    paddingValues: PaddingValues,
+//    paymentSheet: PaymentSheet
 
 ) {
-    val startingScreen = AppRoutes.HomeScreen
+    val user = FirebaseAuth.getInstance().currentUser
+    val startingScreen = if (user != null) AppRoutes.HomeScreen else AppRoutes.LoginScreen
 
 
-    NavHost(
-        navController = navController,
+    NavHost(navController = navController,
         startDestination = startingScreen,
-        modifier = modifier.padding(0.dp)
-    ) {
+        modifier = modifier.padding(0.dp),
+        enterTransition = {
+            slideInHorizontally(
+                initialOffsetX = { fullWidth -> fullWidth },
+                animationSpec = tween(durationMillis = 300)
+            )
+        },
+        exitTransition = {
+            slideOutHorizontally(
+                targetOffsetX = { fullWidth -> -fullWidth },
+                animationSpec = tween(durationMillis = 300)
+            )
+        },
+        popEnterTransition = {
+            slideInHorizontally(
+                initialOffsetX = { fullWidth -> -fullWidth },
+                animationSpec = tween(durationMillis = 300)
+            )
+        },
+        popExitTransition = {
+            slideOutHorizontally(
+                targetOffsetX = { fullWidth -> fullWidth },
+                animationSpec = tween(durationMillis = 300)
+            )
+        }) {
+
+        composable<AppRoutes.Onboarding> {
+            showBottomNavbar.value = false
+            OnboardingScreenUI {
+                navController.navigateAndClear(AppRoutes.LoginScreen)
+            }
+        }
 
         composable<AppRoutes.HomeScreen> {
             showBottomNavbar.value = true
             HomeScreenUI(navigateToCategories = {
                 navController.navigateAndClear(AppRoutes.CategoryScreen)
-            }, navigateToSpecialOffers = {
-                //TODO: @Tag - navigate to special offers here
             }, navigateToBrands = {
                 navController.navigate(AppRoutes.BrandsScreen)
             }, navigateToBrand = { brand ->
-                navController.navigate(AppRoutes.BrandDetailsScreen(brand.id))
-            },
-                navigateToCategory = { category ->
-                    navController.navigate(AppRoutes.CategoryDetailsScreen(category.id))
-                }
+                navController.navigate(AppRoutes.BrandDetailsScreen(brand.name ?: "Empty"))
+            }, navigateToCategory = { category ->
+                navController.navigate(
+                    AppRoutes.CategoryDetailsScreen(
+                        category.name ?: "Empty ID"
+                    )
+                )
+            }, navController = navController, snackBarHostState = snackBarHostState
             )
         }
 
         composable<AppRoutes.BrandsScreen> {
             showBottomNavbar.value = false
-            BrandsScreenUI(navController = navController)
+            BrandsDetailsScreenUI(navController = navController)
         }
         composable<AppRoutes.BrandDetailsScreen> {
             showBottomNavbar.value = false
             val brandArgs = it.toRoute<AppRoutes.BrandDetailsScreen>()
-            BrandScreenUI(brandId = brandArgs.brandId, navController = navController)
+            BrandScreenUI(brandName = brandArgs.brandName, navController = navController)
         }
 
         composable<AppRoutes.ProductDetailsScreen> {
             showBottomNavbar.value = false
             val productArgs = it.toRoute<AppRoutes.ProductDetailsScreen>()
-            ProductDetailsScreenUI(productId = productArgs.productId, navController = navController)
+
+            ProductDetailsScreenUI(
+                productId = productArgs.productId, navController = navController
+            )
         }
 
         composable<AppRoutes.CategoryScreen> {
             showBottomNavbar.value = true
-            CategoryScreenUI { category ->
-                navController.navigate(AppRoutes.CategoryDetailsScreen(category.id))
-            }
+            CategoryScreenUI(navigateToCategory = { category ->
+                navController.navigate(
+                    AppRoutes.CategoryDetailsScreen(
+                        category.name ?: "Empty ID"
+                    )
+                )
+            }, navigateToSubCategory = { category ->
+                navController.navigate(
+                    AppRoutes.CategoryDetailsScreen(
+                        category.name ?: "Empty ID"
+                    )
+                )
+            })
         }
 
         composable<AppRoutes.CategoryDetailsScreen> {
             showBottomNavbar.value = false
             val categoryArgs = it.toRoute<AppRoutes.CategoryDetailsScreen>()
             CategoryDetailsScreenUI(
-                categoryId = categoryArgs.categoryId,
-                navController = navController
+                categoryName = categoryArgs.categoryId, navController = navController
             )
         }
 
         composable<AppRoutes.CartScreen> {
-            CartScreenUI(paddingValues)
+            showBottomNavbar.value = true
+
+            CartScreenUI(paddingValues,
+//                paymentSheet = paymentSheet,
+                navController = navController)
         }
 
         composable<AppRoutes.ProfileScreen> {
+
             showBottomNavbar.value = true
             ProfileScreenUI(navController)
         }
@@ -119,13 +176,20 @@ fun NavSetup(
             CheckoutScreenUI(navController)
         }
 
-        composable<AppRoutes.PaymentScreen> {
+//        composable<AppRoutes.PaymentScreen> {
+//            showBottomNavbar.value = false
+//
+//            PaymentScreenUI(navController, paymentSheet = paymentSheet)
+//        }
+
+        composable<AppRoutes.UserOrdersScreen> {
             showBottomNavbar.value = false
-            PaymentScreenUI(navController)
+            UserOrdersScreenUI(navController = navController)
         }
 
 
         composable<AppRoutes.LoginScreen> {
+            showBottomNavbar.value = false
             LoginScreen(snackBarHostState = snackBarHostState) {
                 navController.navigate(it)
             }
@@ -135,7 +199,8 @@ fun NavSetup(
             ManageAddressScreenUi(navController)
         }
         composable<AppRoutes.AddAddressScreen> {
-            AddAddressScreen(navController)
+            val args = it.toRoute<AppRoutes.AddAddressScreen>()
+            AddAddressScreen(navController, lat = args.lat, lng = args.lng)
         }
         composable<AppRoutes.CreditCardDetails> {
             showBottomNavbar.value = false
@@ -143,13 +208,26 @@ fun NavSetup(
         }
 
         composable<AppRoutes.WishListScreen> {
-            WishListScreen(navController)
+            showBottomNavbar.value = false
+            WishListScreen(snackBarHostState, navController)
         }
         composable<AppRoutes.CurrencyScreen> {
-            CurrencyUiLayout(navController)
+            CurrencyScreenUi(navController)
         }
         composable<AppRoutes.MapScreen> {
-            MapScreenUi(navController,)
+            showBottomNavbar.value = false
+            MapScreenUi(navController)
+        }
+        composable<AppRoutes.HelpCenterScreen> {
+            showBottomNavbar.value = false
+            HelpCenterScreenUiLayout(navController)
+        }
+
+        composable<AppRoutes.SearchScreen> {
+            showBottomNavbar.value = false
+            val args = it.toRoute<AppRoutes.SearchScreen>()
+
+            SearchScreen(navController, snackBarHostState, isWishlist = args.isWishlist)
         }
 
     }

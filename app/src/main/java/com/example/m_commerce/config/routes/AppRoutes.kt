@@ -8,6 +8,9 @@ sealed class AppRoutes {
     object HomeScreen : AppRoutes()
 
     @Serializable
+    object Onboarding : AppRoutes()
+
+    @Serializable
     object CategoryScreen : AppRoutes()
 
     @Serializable
@@ -17,7 +20,7 @@ sealed class AppRoutes {
     object BrandsScreen : AppRoutes()
 
     @Serializable
-    data class BrandDetailsScreen(val brandId: String) : AppRoutes()
+    data class BrandDetailsScreen(val brandName: String) : AppRoutes()
 
     @Serializable
     data class ProductDetailsScreen(val productId: String) : AppRoutes()
@@ -28,11 +31,15 @@ sealed class AppRoutes {
     @Serializable
     object CheckoutScreen : AppRoutes()
 
+
     @Serializable
     object PaymentScreen : AppRoutes()
 
     @Serializable
     object ProfileScreen : AppRoutes()
+
+    @Serializable
+    object UserOrdersScreen : AppRoutes()
 
     @Serializable
     object RegisterScreen : AppRoutes()
@@ -44,7 +51,7 @@ sealed class AppRoutes {
     object ManageAddressScreen : AppRoutes()
 
     @Serializable
-    object AddAddressScreen : AppRoutes()
+    data class AddAddressScreen(val lat: Double, val lng: Double) : AppRoutes()
 
     @Serializable
     object WishListScreen : AppRoutes()
@@ -58,7 +65,12 @@ sealed class AppRoutes {
     @Serializable
     object MapScreen : AppRoutes()
 
+    @Serializable
+    object HelpCenterScreen : AppRoutes()
 
+    @Serializable
+    data class SearchScreen(val isWishlist: Boolean) : AppRoutes()
 
+    // data class AddAddressScreen(val lat: Double, val lng: Double) : AppRoutes
 
 }

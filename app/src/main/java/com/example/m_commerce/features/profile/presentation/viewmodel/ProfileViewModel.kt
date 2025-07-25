@@ -1,49 +1,35 @@
 package com.example.m_commerce.features.profile.presentation.viewmodel
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CreditCard
-import androidx.compose.material.icons.filled.CurrencyExchange
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.lifecycle.ViewModel
-import com.example.m_commerce.features.profile.domain.model.ProfileOption
+import androidx.lifecycle.viewModelScope
+import com.example.m_commerce.core.utils.NetworkManager
+import com.example.m_commerce.features.AddressMangment.domain.usecases.GetCustomerNameUseCase
+import com.example.m_commerce.features.product.presentation.SnackBarMessage
+import com.example.m_commerce.features.profile.presentation.state.ProfileUiState
+import com.google.firebase.auth.FirebaseAuth
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class ProfileViewModel : ViewModel() {
-    private val _profileState = MutableStateFlow(ProfileUiState())
-    val profileState: StateFlow<ProfileUiState> = _profileState.asStateFlow()
+@HiltViewModel
+class ProfileViewModel @Inject constructor(
+    private val getCustomerName: GetCustomerNameUseCase,
+    private val networkManager: NetworkManager,
+    ) : ViewModel() {
+    private val _userNameState = MutableStateFlow("")
+    val userNameState = _userNameState.asStateFlow()
 
-    init {
-        loadProfile()
+
+     fun loadName() = viewModelScope.launch {
+        val name  = getCustomerName().firstOrNull()
+        _userNameState.emit(name ?: "Guest")
     }
 
-    private fun loadProfile() {
-        _profileState.value = ProfileUiState(
-            profileName = "UserName",
-            profileOptions = getProfileOptions()
-        )
-    }
-
-    private fun getProfileOptions(): List<ProfileOption> {
-        return listOf(
-            ProfileOption("Your profile", Icons.Default.Person),
-            ProfileOption("Manage Address", Icons.Default.LocationOn),
-            ProfileOption("Payment Methods", Icons.Default.CreditCard),
-            ProfileOption("My Orders", Icons.Default.ShoppingCart),
-            ProfileOption("My Wishlist", Icons.Default.Favorite),
-            ProfileOption("Currency", Icons.Default.CurrencyExchange),
-            ProfileOption("Settings", Icons.Default.Settings),
-            ProfileOption("Help Center", Icons.Default.LocationOn),
-        )
+    fun isConnected(): Boolean {
+        return networkManager.isNetworkAvailable()
     }
 }
-
-data class ProfileUiState(
-    val profileName: String = "",
-    val profileOptions: List<ProfileOption> = emptyList()
-)

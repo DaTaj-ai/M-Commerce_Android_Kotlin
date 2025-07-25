@@ -2,19 +2,24 @@
 
 package com.example.m_commerce.features.profile.presentation.screen
 
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuDefaults.outlinedTextFieldColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,111 +33,118 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.example.m_commerce.config.theme.Background
 import com.example.m_commerce.config.theme.Teal
 import com.example.m_commerce.core.shared.components.CustomDialog
 import com.example.m_commerce.core.shared.components.default_top_bar.DefaultTopBar
-import com.example.m_commerce.features.profile.presentation.components.currency.CurrencyList
-import com.example.m_commerce.features.profile.presentation.components.currency.CurrencyListItem
+import com.example.m_commerce.core.shared.components.screen_cases.Loading
 import com.example.m_commerce.features.profile.presentation.viewmodel.CurrencyViewModel
 
-
 @Composable
-fun CurrencyUiLayout(
+fun CurrencyScreenUi(
     navController: NavHostController,
     viewModel: CurrencyViewModel = hiltViewModel()
 ) {
     var showDialog by remember { mutableStateOf(false) }
     var query by rememberSaveable { mutableStateOf("") }
+    var selectedCurrencyCode by remember { mutableStateOf<String?>(null) }
+
     val state = viewModel.state
-    val filteredCurrencies = state.currencies.filter {
-        it.currencyName.contains(query, ignoreCase = true) ||
-                it.currencyCode.contains(query, ignoreCase = true)
-    }
+
     Scaffold(
         topBar = {
-            Column() {
+            Column {
                 DefaultTopBar(
                     title = "Choose Default Currency",
-                    navController = navController,
+                    navController = navController
                 )
             }
-
-
         }
-    ) { innerPadding ->
-        when {
-            state.isLoading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-                ) {
-                    CircularProgressIndicator(Modifier.align(Alignment.Center))
+    ) { padding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Background)
+                .padding(padding)
+        ) {
+            when {
+                state.isLoading -> {
+//                    CircularProgressIndicator(Modifier.align(Alignment.Center))
+                    Loading()
                 }
-            }
 
-            state.error.isNotEmpty() -> {
-                // TODO: Handle error UI
-            }
+                state.error.isNotEmpty() -> {
+                    Text("Error: ${state.error}", Modifier.align(Alignment.Center))
+                }
 
-            else -> {
-                var defaultCurrency by remember { mutableStateOf(state.currencies[0]) }
-                var pendingCurrency by remember { mutableStateOf(defaultCurrency) }
+                else -> {
+                    val defaultCode = viewModel.defaultCurrencyCode
+                    val symbolsMap = state.currencies.firstOrNull()?.symbols ?: emptyMap()
 
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-                ) {
+                    val filtered = symbolsMap.filter { (code, name) ->
+                        code.contains(query, ignoreCase = true) ||
+                                name.contains(query, ignoreCase = true)
+                    }
 
-                    CustomDialog(
-                        showDialog = showDialog,
-                        title = "Confirmation",
-                        message = "Are you sure you want to change the default currency?",
-                        onConfirm = {
-                            showDialog = false
-                            defaultCurrency = pendingCurrency ?: defaultCurrency
-                        },
-                        onDismiss = {
-                            showDialog = false
+                    Column(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+
+                        CustomDialog(
+                            showDialog = showDialog,
+                            title = "Confirm Change",
+                            message = "Set $selectedCurrencyCode as default currency?",
+                            onConfirm = {
+                                showDialog = false
+                                selectedCurrencyCode?.let { viewModel.saveDefaultCurrency(it) }
+                            },
+                            onDismiss = {
+                                showDialog = false
+                            }
+                        )
+
+                        InlineSearchBar(
+                            query = query,
+                            onQueryChange = { query = it },
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+
+                        Text(
+                            text = "Your Default: ${defaultCode ?: "None"}", fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(16.dp)
+                        )
+
+                        Text(
+                            text = "Available Currencies",
+                            modifier = Modifier.padding(16.dp),
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        LazyColumn(modifier = Modifier.weight(1f)) {
+                            items(filtered.entries.toList()) {
+                                (code, name) ->
+                                Text(
+                                    text = "$code – $name",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            selectedCurrencyCode = code
+                                            showDialog = true
+                                        }
+                                        .padding(12.dp)
+                                )
+                            }
                         }
-                    )
-
-                    InlineSearchBar(
-                        query = query,
-                        onQueryChange = { query = it },
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
-                    Text(
-                        text = "Your Default Currency",
-                        modifier = Modifier.padding(16.dp)
-                    )
-
-                    CurrencyListItem(defaultCurrency, onCurrencyClick = {
-                        print("we clicked on ${it.currencyName}")
-                        showDialog = true
-                        defaultCurrency = it
-                    })
-                    Text(
-                        text = "Available Currencies",
-                        modifier = Modifier.padding(16.dp)
-                    )
-                    CurrencyList(
-                        filteredCurrencies,
-                        modifier = Modifier.weight(1f), onCurrencyClick = {
-                            showDialog = true
-                            pendingCurrency = it
-                        })
+                    }
                 }
             }
         }
     }
-
 }
-
 
 @Composable
 fun InlineSearchBar(
@@ -155,7 +167,9 @@ fun InlineSearchBar(
         placeholder = { Text("Search") },
         singleLine = true,
         modifier = modifier
-            .fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = outlinedTextFieldColors(
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = Teal,
             unfocusedBorderColor = Teal,
             cursorColor = Teal
