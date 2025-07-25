@@ -155,10 +155,10 @@ You can add screenshots of:
 
 ## Team Members
 
-### Ahmed Mohamed Saad
+### Mohamed Tag El-Deen Ahmed
 
 **Mobile Software Engineer**
-[GitHub](https://github.com/ahmedsaad207) | [LinkedIn](https://www.linkedin.com/in/dev-ahmed-saad/)
+[GitHub](https://github.com/DaTaj-ai) | [LinkedIn](https://www.linkedin.com/in/mohamed-tag-eldeen) 
 
 ---
 
@@ -169,10 +169,10 @@ You can add screenshots of:
 
 ---
 
-### Mohamed Tag El-Deen Ahmed
+### Ahmed Mohamed Saad
 
 **Mobile Software Engineer**
-[LinkedIn](https://www.linkedin.com/in/mohamed-tag-eldeen)
+[GitHub](https://github.com/ahmedsaad207) | [LinkedIn](https://www.linkedin.com/in/dev-ahmed-saad/)
 
 ---
 
@@ -191,6 +191,6 @@ This project is licensed under the [MIT License](LICENSE).
 
 ## Contact
 
-**Maintainer:** Ayat Gamal
-[GitHub Profile](https://github.com/Ayat-Gamal)
+**Maintainer:** Mohamed Taj eldin Ahmed
+[GitHub Profile](https://github.com/DaTaj-ai)
 Feel free to open issues or discussions for questions and ideas.
